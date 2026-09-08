@@ -503,6 +503,12 @@ function renderSeats() {
   renderSeatSidebar();
 }
 
+function validateSeats() {
+  const seatEligible = state.passengers.filter(p => p.type !== "Infant");
+  const missing = seatEligible.some((p, i) => !state.seats[i]);
+  return !missing;
+}
+
 function seatsFareTotal() {
   let sum = 0;
   Object.values(state.seats).forEach(seatId => {
@@ -694,6 +700,11 @@ function renderEnquiry() {
 
     openWhatsApp(link);
     showConfirmation(ref, link);
+
+    // Google Ads conversion tracking — fires once, exactly when a booking is confirmed
+    if (typeof gtag === "function") {
+      gtag('event', 'conversion', {'send_to': 'AW-18433634020/ZFF4CKL-XOScKOTd69VE'});
+    }
   };
 }
 
@@ -704,7 +715,10 @@ function wireGlobalHandlers() {
     if (!validatePassengers()) { alert("Please complete all required passenger fields."); return; }
     goTo("seats");
   });
-  document.getElementById("continueToExtras").addEventListener("click", () => goTo("extras"));
+  document.getElementById("continueToExtras").addEventListener("click", () => {
+    if (!validateSeats()) { alert("Please select a seat for every passenger before continuing."); return; }
+    goTo("extras");
+  });
   document.getElementById("continueToSummary").addEventListener("click", () => goTo("summary"));
   document.getElementById("continueToEnquiry").addEventListener("click", () => goTo("enquiry"));
   document.getElementById("editSearchBtn").addEventListener("click", () => { clearSavedState(); window.location.href = "index.html#search"; });
